@@ -130,9 +130,11 @@
         weMuted = true;
         video.muted = true;
       }
-      if (Number.isFinite(video.duration) && video.duration > 0) {
-        video.currentTime = video.duration; // 끝으로 점프 → 광고 즉시 종료 처리
-      } else {
+      const d = video.duration;
+      if (Number.isFinite(d) && d > 0) {
+        // 이미 끝부분이면 다시 seek 하지 않는다 (반복 seek로 인한 버벅임 방지)
+        if (video.currentTime < d - 0.5) video.currentTime = d;
+      } else if (video.playbackRate < 16) {
         video.playbackRate = 16; // duration 미상이면 재생속도라도 최대로
       }
     } catch (_) {
@@ -216,18 +218,8 @@
 
   loadSettings();
 
-  // 폴링: MutationObserver만으로는 .ad-showing 토글/버튼 등장 타이밍을 놓칠 수 있어
-  // 가벼운 인터벌로 보강한다.
-  setInterval(tick, 500);
-
-  // DOM 변화에도 즉시 반응
-  const observer = new MutationObserver(() => tick());
-  const startObserving = () => {
-    if (document.body) {
-      observer.observe(document.body, { childList: true, subtree: true });
-    } else {
-      requestAnimationFrame(startObserving);
-    }
-  };
-  startObserving();
+  // 가벼운 폴링만으로 광고를 감지/스킵한다.
+  // MutationObserver로 YouTube의 잦은 DOM 변경마다 tick을 돌리면 메인 스레드가
+  // 포화되어 클릭/키보드 입력이 멈추는 현상이 생길 수 있어 쓰지 않는다.
+  setInterval(tick, 300);
 })();
