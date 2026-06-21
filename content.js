@@ -72,7 +72,7 @@
   }
 
   function countSkip() {
-    // MutationObserver가 짧은 시간에 tick을 여러 번 부를 수 있어 중복 카운트를 막는다
+    // 한 광고를 여러 tick에 걸쳐 처리하며 같은 스킵을 중복 카운트하지 않도록 막는다
     const now = Date.now();
     if (now - lastCountAt < 1000) return;
     lastCountAt = now;
