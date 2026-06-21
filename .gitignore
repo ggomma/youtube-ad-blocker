@@ -1,0 +1,12 @@
+# Playwright MCP capture logs
+.playwright-mcp/
+
+# Build artifacts
+dist/
+*.zip
+
+# macOS
+.DS_Store
+
+# Node
+node_modules/

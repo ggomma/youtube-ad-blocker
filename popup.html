@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YouTube 광고 스킵</title>
+    <style>
+      :root {
+        --bg: #0f0f0f;
+        --card: #1c1c1c;
+        --text: #f1f1f1;
+        --muted: #aaaaaa;
+        --accent: #ff4e45;
+        --on: #2ec27e;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        width: 280px;
+        font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          "Apple SD Gothic Neo", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        padding: 16px;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 14px;
+      }
+      header .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--accent);
+      }
+      header h1 {
+        font-size: 14px;
+        font-weight: 600;
+        margin: 0;
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: var(--card);
+        border-radius: 10px;
+        padding: 12px 14px;
+        margin-bottom: 10px;
+      }
+      .row .label {
+        font-size: 13px;
+      }
+      .row .sub {
+        font-size: 11px;
+        color: var(--muted);
+        margin-top: 2px;
+      }
+      /* 토글 스위치 */
+      .switch {
+        position: relative;
+        display: inline-block;
+        width: 44px;
+        height: 24px;
+        flex-shrink: 0;
+      }
+      .switch input { opacity: 0; width: 0; height: 0; }
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        inset: 0;
+        background: #444;
+        transition: 0.2s;
+        border-radius: 24px;
+      }
+      .slider::before {
+        content: "";
+        position: absolute;
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background: #fff;
+        transition: 0.2s;
+        border-radius: 50%;
+      }
+      input:checked + .slider { background: var(--on); }
+      input:checked + .slider::before { transform: translateX(20px); }
+
+      .stat {
+        text-align: center;
+        padding: 14px;
+        background: var(--card);
+        border-radius: 10px;
+      }
+      .stat .num {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--on);
+        line-height: 1;
+      }
+      .stat .cap {
+        font-size: 11px;
+        color: var(--muted);
+        margin-top: 6px;
+      }
+      footer {
+        margin-top: 12px;
+        font-size: 10px;
+        color: var(--muted);
+        text-align: center;
+        line-height: 1.4;
+      }
+
+      /* 재생 속도 섹션 */
+      .row.block { display: block; }
+      .speed-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      .speed-val {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--on);
+        flex-shrink: 0;
+      }
+      .range {
+        width: 100%;
+        -webkit-appearance: none;
+        appearance: none;
+        height: 6px;
+        border-radius: 999px;
+        background: #3a3a3a;
+        outline: none;
+      }
+      .range::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--on);
+        border: 2px solid var(--bg);
+        cursor: pointer;
+      }
+      .chips {
+        display: flex;
+        gap: 6px;
+        margin-top: 12px;
+      }
+      .chip {
+        flex: 1;
+        background: #2a2a2a;
+        color: var(--text);
+        border: 1px solid transparent;
+        border-radius: 8px;
+        padding: 6px 0;
+        font-size: 12px;
+        cursor: pointer;
+        transition: 0.15s;
+      }
+      .chip:hover { background: #343434; }
+      .chip.active {
+        background: rgba(46, 194, 126, 0.15);
+        border-color: var(--on);
+        color: var(--on);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <span class="dot"></span>
+      <h1>YouTube 광고 스킵</h1>
+    </header>
+
+    <div class="row">
+      <div>
+        <div class="label">광고 스킵 활성화</div>
+        <div class="sub" id="status-text">동작 중</div>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="toggle" checked />
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="row block">
+      <div class="speed-head">
+        <div>
+          <div class="label">재생 속도</div>
+          <div class="sub">YouTube 2배 제한을 넘어 최대 5배까지</div>
+        </div>
+        <div class="speed-val" id="speed-val">1×</div>
+      </div>
+      <input
+        class="range"
+        type="range"
+        id="speed"
+        min="0.25"
+        max="5"
+        step="0.25"
+        value="1"
+      />
+      <div class="chips">
+        <button type="button" class="chip" data-speed="1">1×</button>
+        <button type="button" class="chip" data-speed="1.5">1.5×</button>
+        <button type="button" class="chip" data-speed="2">2×</button>
+        <button type="button" class="chip" data-speed="3">3×</button>
+        <button type="button" class="chip" data-speed="4">4×</button>
+      </div>
+    </div>
+
+    <div class="stat">
+      <div class="num" id="count">0</div>
+      <div class="cap">지금까지 건너뛴 광고</div>
+    </div>
+
+    <footer>
+      개인 사용 목적의 도구입니다. YouTube가 마크업을<br />
+      변경하면 일시적으로 동작하지 않을 수 있습니다.
+    </footer>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
