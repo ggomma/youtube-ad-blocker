@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YouTube 광고 스킵 — Chrome 확장</title>
+    <meta
+      name="description"
+      content="YouTube 광고를 자동으로 건너뛰고, 재생 속도를 2배 제한 없이 최대 5배까지 조절하는 Chrome 확장. 무료 다운로드."
+    />
+    <link rel="icon" href="assets/icon128.png" />
+    <meta property="og:title" content="YouTube 광고 스킵 — Chrome 확장" />
+    <meta
+      property="og:description"
+      content="YouTube 광고 자동 스킵 + 재생 속도 최대 5배. 무료 다운로드."
+    />
+    <meta property="og:image" content="assets/popup-preview.png" />
+    <style>
+      :root {
+        --bg: #0c0c0c;
+        --bg2: #141414;
+        --card: #1a1a1a;
+        --line: #2a2a2a;
+        --text: #f4f4f4;
+        --muted: #a3a3a3;
+        --red: #ff4e45;
+        --green: #2ec27e;
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+      }
+      a { color: inherit; }
+      .wrap { max-width: 860px; margin: 0 auto; padding: 0 20px; }
+
+      /* 헤더 */
+      header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 22px 0;
+      }
+      header img { width: 34px; height: 34px; border-radius: 8px; }
+      header .name { font-weight: 700; font-size: 16px; }
+      header .spacer { flex: 1; }
+      header .gh {
+        font-size: 13px;
+        color: var(--muted);
+        text-decoration: none;
+        border: 1px solid var(--line);
+        padding: 7px 12px;
+        border-radius: 8px;
+        transition: 0.15s;
+      }
+      header .gh:hover { border-color: #555; color: var(--text); }
+
+      /* 히어로 */
+      .hero {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 36px;
+        align-items: center;
+        padding: 40px 0 56px;
+      }
+      .hero h1 {
+        font-size: 40px;
+        line-height: 1.15;
+        margin: 0 0 16px;
+        letter-spacing: -0.02em;
+      }
+      .hero h1 .hl { color: var(--red); }
+      .hero p.lead { font-size: 17px; color: var(--muted); margin: 0 0 28px; }
+      .cta { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        background: var(--green);
+        color: #06200f;
+        font-weight: 700;
+        font-size: 16px;
+        text-decoration: none;
+        padding: 14px 24px;
+        border-radius: 12px;
+        transition: 0.15s;
+      }
+      .btn:hover { transform: translateY(-1px); filter: brightness(1.07); }
+      .btn .sz { font-weight: 500; opacity: 0.7; font-size: 13px; }
+      .btn-ghost {
+        font-size: 14px;
+        color: var(--muted);
+        text-decoration: none;
+        padding: 14px 6px;
+      }
+      .btn-ghost:hover { color: var(--text); }
+      .hero .shot {
+        justify-self: center;
+        width: 240px;
+        border-radius: 16px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+        border: 1px solid var(--line);
+      }
+
+      /* 섹션 */
+      section { padding: 44px 0; border-top: 1px solid var(--line); }
+      h2 {
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--muted);
+        margin: 0 0 24px;
+        font-weight: 600;
+      }
+
+      /* 기능 카드 */
+      .features { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+      .feat {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 20px;
+      }
+      .feat .ic { font-size: 22px; }
+      .feat h3 { margin: 12px 0 6px; font-size: 16px; }
+      .feat p { margin: 0; font-size: 14px; color: var(--muted); }
+
+      /* 설치 단계 */
+      .step { margin-bottom: 34px; }
+      .step .head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+      .step .num {
+        flex-shrink: 0;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: var(--red);
+        color: #fff;
+        font-weight: 700;
+        display: grid;
+        place-items: center;
+        font-size: 15px;
+      }
+      .step .head h3 { margin: 0; font-size: 17px; font-weight: 600; }
+      .step .head h3 .muted { color: var(--muted); font-weight: 400; font-size: 14px; }
+      .step p.desc { margin: 0 0 14px 42px; color: var(--muted); font-size: 14px; }
+      .step p.desc code {
+        background: var(--bg2);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 2px 7px;
+        font-size: 13px;
+        color: var(--text);
+      }
+      .step .img {
+        margin-left: 42px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        overflow: hidden;
+        background: #fff;
+      }
+      .step .img img { width: 100%; display: block; }
+      .step .img.dark { background: var(--bg2); }
+
+      /* 푸터 */
+      footer {
+        border-top: 1px solid var(--line);
+        padding: 30px 0 50px;
+        color: var(--muted);
+        font-size: 13px;
+        text-align: center;
+      }
+      footer .note {
+        background: var(--bg2);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 14px 16px;
+        margin-bottom: 20px;
+        line-height: 1.5;
+      }
+      footer a { color: var(--muted); }
+
+      @media (max-width: 680px) {
+        .hero { grid-template-columns: 1fr; gap: 28px; text-align: center; }
+        .hero h1 { font-size: 32px; }
+        .cta { justify-content: center; }
+        .hero .shot { order: -1; width: 200px; }
+        .features { grid-template-columns: 1fr; }
+        .step p.desc, .step .img { margin-left: 0; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <img src="assets/icon128.png" alt="로고" />
+        <span class="name">YouTube 광고 스킵</span>
+        <span class="spacer"></span>
+        <a class="gh" href="https://github.com/ggomma/youtube-ad-blocker" target="_blank" rel="noopener">GitHub ↗</a>
+      </header>
+
+      <!-- 히어로 -->
+      <div class="hero">
+        <div>
+          <h1>YouTube 광고는 <span class="hl">스킵</span>,<br />속도는 <span class="hl">2배 그 이상</span>.</h1>
+          <p class="lead">
+            건너뛰기 광고를 자동으로 넘기고, 건너뛰기 불가 광고는 순식간에
+            지나칩니다. 재생 속도는 YouTube의 2배 제한을 넘어 최대 5배까지.
+          </p>
+          <div class="cta">
+            <a class="btn" href="https://github.com/ggomma/youtube-ad-blocker/releases/latest/download/youtube-ad-blocker.zip">
+              ⬇ 다운로드 <span class="sz">.zip · 무료</span>
+            </a>
+            <a class="btn-ghost" href="#install">설치 방법 보기 ↓</a>
+          </div>
+        </div>
+        <img class="shot" src="assets/popup-preview.png" alt="확장 팝업 미리보기" />
+      </div>
+
+      <!-- 기능 -->
+      <section>
+        <h2>기능</h2>
+        <div class="features">
+          <div class="feat">
+            <div class="ic">⏭️</div>
+            <h3>건너뛰기 광고 자동 스킵</h3>
+            <p>"건너뛰기" 버튼이 뜨면 즉시 클릭. 광고가 끝으로 간 뒤 남는 "넘어가기" 버튼까지 눌러줍니다.</p>
+          </div>
+          <div class="feat">
+            <div class="ic">⚡</div>
+            <h3>건너뛰기 불가 광고 고속 처리</h3>
+            <p>건너뛸 수 없는 광고는 음소거하고 영상 끝으로 점프시켜 순식간에 지나칩니다.</p>
+          </div>
+          <div class="feat">
+            <div class="ic">🚫</div>
+            <h3>배너 · 오버레이 광고 닫기</h3>
+            <p>영상 위에 뜨는 배너/오버레이 광고의 닫기 버튼을 자동으로 클릭합니다.</p>
+          </div>
+          <div class="feat">
+            <div class="ic">🏃</div>
+            <h3>재생 속도 최대 5배</h3>
+            <p>YouTube 기본 2배 제한을 넘어 최대 5배. 광고가 지나가거나 다음 영상으로 넘어가도 속도가 유지됩니다.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 설치 -->
+      <section id="install">
+        <h2>다운로드 & 설치</h2>
+
+        <div class="step">
+          <div class="head">
+            <div class="num">1</div>
+            <h3>다운로드 후 압축 해제</h3>
+          </div>
+          <p class="desc">
+            위 <strong>다운로드</strong> 버튼(또는 아래 GitHub Releases)에서
+            <code>youtube-ad-blocker.zip</code>을 받아 더블클릭해 압축을 풉니다.
+          </p>
+          <div class="img"><img src="assets/step-download.png" alt="GitHub Releases 다운로드 화면" /></div>
+        </div>
+
+        <div class="step">
+          <div class="head">
+            <div class="num">2</div>
+            <h3>개발자 모드 켜기 <span class="muted">— Developer mode</span></h3>
+          </div>
+          <p class="desc">
+            Chrome 주소창에 <code>chrome://extensions</code>를 입력해 들어간 뒤,
+            우측 상단의 <strong>개발자 모드</strong> 스위치를 켭니다.
+          </p>
+          <div class="img dark"><img src="assets/step-devmode.png" alt="chrome://extensions 개발자 모드 스위치" /></div>
+        </div>
+
+        <div class="step">
+          <div class="head">
+            <div class="num">3</div>
+            <h3>압축해제된 확장 프로그램을 로드 <span class="muted">— Load unpacked</span></h3>
+          </div>
+          <p class="desc">
+            왼쪽 위에 나타난 <strong>압축해제된 확장 프로그램을 로드합니다</strong>
+            버튼을 누르고, 1단계에서 압축을 푼 <code>youtube-ad-blocker</code> 폴더를
+            선택하면 설치 완료입니다.
+          </p>
+          <div class="img dark"><img src="assets/step-load.png" alt="Load unpacked 버튼" /></div>
+        </div>
+      </section>
+
+      <footer>
+        <div class="note">
+          개인 학습/사용 목적의 도구입니다. YouTube가 플레이어 마크업을 바꾸면
+          일시적으로 동작하지 않을 수 있으며, 광고 차단은 YouTube 이용약관상
+          권장되지 않습니다.
+        </div>
+        <a href="https://github.com/ggomma/youtube-ad-blocker">github.com/ggomma/youtube-ad-blocker</a>
+      </footer>
+    </div>
+  </body>
+</html>
